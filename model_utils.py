@@ -11,7 +11,7 @@ def load_model_and_predict(test_file_path):
     try:
         if not os.path.exists('models/trained_model.keras'):
             logger.warning("Модель не найдена, возвращаю тестовые значения")
-            return 0.85, 0.45
+            return 0.1, 0.4
 
         model = tf.keras.models.load_model('models/trained_model.keras')
         logger.info(f"Модель загружена")
