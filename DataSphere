@@ -1,0 +1,20 @@
+import numpy as np
+
+data = np.load('training_data.npz', allow_pickle=True)
+train_x = data['train_x']  # массив объектов (wav)
+train_y_raw = data['train_y']
+valid_x = data['valid_x']
+valid_y = data['valid_y']
+
+restored_train_y = []
+for item in train_y_raw:
+    try:
+        if isinstance(item, bytes):
+            restored_train_y.append(int.from_bytes(item, byteorder='little'))
+        else:
+            restored_train_y.append(int(item))
+    except:
+        print(f"Не удалось преобразовать: {item}, тип: {type(item)}")
+        restored_train_y.append(0) 
+
+restored_train_y = np.array(restored_train_y)

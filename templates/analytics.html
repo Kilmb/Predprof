@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Аналитика</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h2>Аналитика данных</h2>
+        <p><a href="{{ url_for('user_dashboard') }}">Назад</a> | <a href="{{ url_for('logout') }}">Выйти</a></p>
+    </div>
+
+    <div class="content">
+        <div class="info-panel">
+            <h3>Информация о данных</h3>
+            <p>📊 Количество эпох обучения: <strong>{{ epochs|length }}</strong>
+               (диапазон: {{ min_epochs }} - {{ max_epochs }})</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="chart-card">
+            <h3>График точности на валидации</h3>
+            <p class="chart-description">Зависимость точности модели от количества эпох обучения</p>
+            <div class="chart-container">
+                <canvas id="valAccuracyChart"></canvas>
+            </div>
+        </div>
+
+        {% if train_acc and train_acc|length > 0 %}
+        <div class="chart-card">
+            <h3>Сравнение точности (обучение vs валидация)</h3>
+            <p class="chart-description">Синяя линия - обучение, красная - валидация</p>
+            <div class="chart-container">
+                <canvas id="comparisonChart"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="chart-card">
+            <h3>Распределение записей в обучающем наборе по классам</h3>
+            <p class="chart-description">Количество сигналов от каждой цивилизации в обучающей выборке</p>
+            <div class="chart-container">
+                <canvas id="classDistChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Топ-5 наиболее часто встречающихся классов</h3>
+            <p class="chart-description">Цивилизации, которые чаще всего встречаются в данных</p>
+            <div class="chart-container">
+                <canvas id="top5Chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const ctx1 = document.getElementById('valAccuracyChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: {{ epochs | tojson }},
+            datasets: [{
+                label: 'Точность на валидации (%)',
+                data: {{ val_acc | tojson }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                tension: 0.1,
+                fill: true,
+                pointRadius: 3,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Точность на валидации ({{ epochs|length }} эпох)'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Точность (%)'
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Эпоха обучения'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    {% if train_acc and train_acc|length > 0 %}
+    const ctxCompare = document.getElementById('comparisonChart').getContext('2d');
+    new Chart(ctxCompare, {
+        type: 'line',
+        data: {
+            labels: {{ epochs | tojson }},
+            datasets: [
+                {
+                    label: 'Точность на обучении (%)',
+                    data: {{ train_acc | tojson }},
+                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                    tension: 0.1,
+                    fill: false
+                },
+                {
+                    label: 'Точность на валидации (%)',
+                    data: {{ val_acc | tojson }},
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    tension: 0.1,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+    {% endif %}
+
+    const ctx2 = document.getElementById('classDistChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: {{ class_labels | tojson }},
+            datasets: [{
+                label: 'Количество записей',
+                data: {{ class_counts | tojson }},
+                backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Распределение по классам (всего классов: {{ class_labels|length }})'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Количество записей'
+                    }
+                }
+            }
+        }
+    });
+
+    const ctx3 = document.getElementById('top5Chart').getContext('2d');
+    new Chart(ctx3, {
+        type: 'bar',
+        data: {
+            labels: {{ top5_classes | tojson }},
+            datasets: [{
+                label: 'Количество записей',
+                data: {{ top5_counts | tojson }},
+                backgroundColor: 'rgba(255, 159, 64, 0.7)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Топ-5 цивилизаций'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Количество записей'
+                    }
+                }
+            }
+        }
+    });
+    </script>
+</body>
+</html>

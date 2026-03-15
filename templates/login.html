@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Вход в систему</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <h2>Классификация сигналов</h2>
+        <h3>Вход в систему</h3>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-error">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <label for="username">Имя пользователя:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Пароль:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Войти</button>
+        </form>
+    </div>
+</body>
+</html>

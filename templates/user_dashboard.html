@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Панель пользователя</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="header">
+        <h2>Панель пользователя</h2>
+        <p>Добро пожаловать, {{ user_name }}!
+           <a href="{{ url_for('analytics') }}">Аналитика</a> |
+           <a href="{{ url_for('logout') }}">Выйти</a>
+        </p>
+    </div>
+
+    <div class="content">
+        {% if total_uploads and total_uploads > 0 %}
+        <div class="info-panel">
+            <h3>Ваша статистика</h3>
+            <p>📊 Всего загрузок: <strong>{{ total_uploads }}</strong></p>
+            <p>📈 Средняя точность: <strong>{{ avg_accuracy }}%</strong></p>
+            <p>💾 Всего загружено: <strong>{{ total_size }} MB</strong></p>
+        </div>
+        {% endif %}
+
+        <h3>Загрузить тестовый набор данных</h3>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-success">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="upload-container" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
+                <div style="margin-bottom: 15px;">
+                    <label for="testfile">Выберите .npz файл:</label>
+                    <input type="file" name="testfile" id="testfile" accept=".npz" required>
+                </div>
+
+                <div style="margin-bottom: 15px; color: #666; font-size: 0.9em;">
+                    <p>📋 Требования к файлу:</p>
+                    <ul style="margin-left: 20px;">
+                        <li>Формат: .npz (NumPy архив)</li>
+                        <li>Должен содержать ключи: 'x' (данные) и 'y' (метки)</li>
+                        <li>Максимальный размер: <strong>500MB</strong></li>
+                    </ul>
+                </div>
+
+                <div id="file-info" style="margin: 10px 0; padding: 10px; background: #e9ecef; border-radius: 5px; display: none;">
+                    <p>Выбран файл: <span id="filename"></span></p>
+                    <p>Размер: <span id="filesize"></span></p>
+                </div>
+
+                <button type="submit" id="submit-btn">Загрузить и протестировать</button>
+            </form>
+        </div>
+
+        <div style="margin: 30px 0; text-align: center;">
+            <a href="{{ url_for('analytics') }}">
+                <button style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 40px; font-size: 18px;">
+                    📊 Перейти к аналитике и графикам
+                </button>
+            </a>
+        </div>
+
+        <h3>Быстрый старт</h3>
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <p>📁 Для тестирования используйте демо-файл:</p>
+            <code style="background: #e9ecef; padding: 10px; display: block; margin: 10px 0; border-radius: 5px;">
+                uploads/demo_test_data.npz
+            </code>
+            <p>Или создайте свой .npz файл с ключами 'x' и 'y'</p>
+        </div>
+
+        {% if upload_history and upload_history|length > 0 %}
+        <h3>История загрузок</h3>
+        <table>
+            <tr>
+                <th>Файл</th>
+                <th>Размер</th>
+                <th>Точность</th>
+                <th>Потери</th>
+                <th>Дата</th>
+            </tr>
+            {% for upload in upload_history %}
+            <tr>
+                <td>{{ upload[0] }}</td>
+                <td>
+                    {% if upload[1] %}
+                        {{ (upload[1] / (1024*1024))|round(2) }} MB
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if upload[2] %}
+                        <span style="color: {% if upload[2] > 0.8 %}#27ae60{% elif upload[2] > 0.6 %}#f39c12{% else %}#e74c3c{% endif %}; font-weight: bold;">
+                            {{ "%.2f"|format(upload[2]*100) }}%
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if upload[3] %}
+                        {{ "%.4f"|format(upload[3]) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ upload[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+
+    <script>
+    document.getElementById('testfile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            document.getElementById('filename').textContent = file.name;
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('filesize').textContent = sizeMB + ' MB';
+            document.getElementById('file-info').style.display = 'block';
+
+            if (file.size > 500 * 1024 * 1024) {
+                alert('Внимание: Файл превышает максимальный размер 500MB!');
+                document.getElementById('submit-btn').disabled = true;
+            } else {
+                document.getElementById('submit-btn').disabled = false;
+            }
+        }
+    });
+    </script>
+</body>
+</html>

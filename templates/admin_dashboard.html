@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Панель администратора</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="header">
+        <h2>Панель администратора</h2>
+        <p>Добро пожаловать, {{ admin_name }}!
+           <a href="{{ url_for('analytics') }}">Аналитика</a> |
+           <a href="{{ url_for('training_log') }}">Лог обучения</a> |
+           <a href="{{ url_for('upload_status') }}">Статус загрузок</a> |
+           <a href="{{ url_for('logout') }}">Выйти</a>
+        </p>
+    </div>
+
+    <div class="content">
+        <div class="info-panel">
+            <h3>Статистика системы</h3>
+            <p>📊 Всего загрузок: <strong>{{ total_uploads }}</strong></p>
+            <p>📈 Средняя точность: <strong>{{ avg_accuracy }}%</strong></p>
+            <p>💾 Всего загружено данных: <strong>{{ total_size }} MB</strong></p>
+            <p>📦 Макс. размер файла: <strong>500 MB</strong></p>
+        </div>
+
+        <div style="margin: 20px 0; text-align: center;">
+            <a href="{{ url_for('analytics') }}">
+                <button style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 12px 30px;">
+                    📊 Просмотреть аналитику и графики
+                </button>
+            </a>
+        </div>
+
+        <h3>Статистика по пользователям</h3>
+        <table>
+            <tr>
+                <th>Пользователь</th>
+                <th>Загрузок</th>
+                <th>Средняя точность</th>
+            </tr>
+            {% for stat in user_stats %}
+            <tr>
+                <td>{{ stat[0] }}</td>
+                <td>{{ stat[1] or 0 }}</td>
+                <td>
+                    {% if stat[2] %}
+                        {{ "%.2f"|format(stat[2]*100) }}%
+                    {% else %}
+                        Нет данных
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h3>Создать нового пользователя</h3>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-success">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="text" name="first_name" placeholder="Имя" required>
+            <input type="text" name="last_name" placeholder="Фамилия" required>
+            <input type="text" name="username" placeholder="Логин" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            <select name="role">
+                <option value="user">Пользователь</option>
+                <option value="admin">Администратор</option>
+            </select>
+            <button type="submit">Создать пользователя</button>
+        </form>
+
+        <h3>Список пользователей</h3>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Имя</th>
+                <th>Фамилия</th>
+                <th>Логин</th>
+                <th>Роль</th>
+                <th>Дата создания</th>
+                <th>Действия</th>
+            </tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user[0] }}</td>
+                <td>{{ user[3] }}</td>
+                <td>{{ user[4] }}</td>
+                <td>{{ user[1] }}</td>
+                <td>
+                    {% if user[2] == 'admin' %}
+                        <span style="color: #e74c3c; font-weight: bold;">Администратор</span>
+                    {% else %}
+                        <span style="color: #27ae60;">Пользователь</span>
+                    {% endif %}
+                </td>
+                <td>{{ user[5] }}</td>
+                <td>
+                    {% if user[0] != session['user_id'] %}
+                    <form method="POST" action="{{ url_for('delete_user', user_id=user[0]) }}" style="display: inline;">
+                        <button type="submit" onclick="return confirm('Удалить пользователя?')" style="background: #e74c3c; padding: 5px 10px; font-size: 12px;">
+                            Удалить
+                        </button>
+                    </form>
+                    {% else %}
+                        <span style="color: #95a5a6;">Текущий</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <div style="margin-top: 20px;">
+            <a href="{{ url_for('reset_db') }}" onclick="return confirm('Сбросить базу данных? Все пользователи будут восстановлены по умолчанию.')">
+                <button style="background: #95a5a6;">Сбросить БД</button>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

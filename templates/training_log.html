@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title><!DOCTYPE html>
+<html>
+<head>
+    <title>Лог обучения</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="header">
+        <h2>Лог обучения модели</h2>
+        <p><a href="{{ url_for('admin_dashboard') }}">Назад</a> | <a href="{{ url_for('logout') }}">Выйти</a></p>
+    </div>
+
+    <div class="content">
+        <h3>История обучения</h3>
+        
+        {% if log_content %}
+            <pre style="background: #2c3e50; color: #ecf0f1; padding: 20px; border-radius: 10px; overflow-x: auto; font-family: monospace; font-size: 14px; line-height: 1.5;">
+{{ log_content }}
+            </pre>
+        {% else %}
+            <div class="alert alert-info">
+                Лог обучения пуст. Запустите обучение модели для появления записей.
+            </div>
+            
+            <div style="text-align: center; margin: 40px 0;">
+                <p>Для запуска обучения выполните:</p>
+                <code style="background: #eee; padding: 10px; display: inline-block; margin: 10px;">
+                    python train_model.py
+                </code>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html></title>
+</head>
+<body>
+
+</body>
+</html>
