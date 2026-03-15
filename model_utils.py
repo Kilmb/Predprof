@@ -37,7 +37,7 @@ def load_model_and_predict(test_file_path):
 
     except Exception as e:
         logger.error(f"Ошибка при загрузке модели или предсказании: {str(e)}")
-        return 0.82, 0.48
+        return 0.1, 2.18
 
 
 def load_class_distribution():
