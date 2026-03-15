@@ -106,7 +106,6 @@ def create_model(input_shape, num_classes):
 
 
 def train_model(epochs=50, batch_size=32):
-
     logger.info("=" * 60)
     logger.info("НАЧАЛО ОБУЧЕНИЯ МОДЕЛИ")
     logger.info(f"Эпох: {epochs}, Batch size: {batch_size}")
@@ -128,14 +127,14 @@ def train_model(epochs=50, batch_size=32):
         ),
         tf.keras.callbacks.EarlyStopping(
             monitor='val_loss',
-            patience=10,
+            patience=40,
             restore_best_weights=True,
             verbose=1
         ),
         tf.keras.callbacks.ReduceLROnPlateau(
             monitor='val_loss',
             factor=0.5,
-            patience=5,
+            patience=20,
             min_lr=1e-6,
             verbose=1
         ),
@@ -153,14 +152,14 @@ def train_model(epochs=50, batch_size=32):
     )
 
     model.save('models/trained_model.keras')
-    logger.info("✅ Финальная модель сохранена в models/trained_model.keras")
+    logger.info("Финальная модель сохранена в models/trained_model.keras")
 
     np.savez('models/training_history.npz',
              accuracy=history.history['accuracy'],
              val_accuracy=history.history['val_accuracy'],
              loss=history.history['loss'],
              val_loss=history.history['val_loss'])
-    logger.info("✅ История обучения сохранена")
+    logger.info("История обучения сохранена")
 
     if os.path.exists('models/cleaned_train_data.npz'):
         data = np.load('models/cleaned_train_data.npz', allow_pickle=True)
@@ -169,7 +168,7 @@ def train_model(epochs=50, batch_size=32):
             y_all = np.argmax(y_all, axis=1)
         classes, counts = np.unique(y_all, return_counts=True)
         np.savez('models/class_distribution.npz', classes=classes, counts=counts)
-        logger.info("✅ Распределение классов сохранено")
+        logger.info("Распределение классов сохранено")
 
     final_train_acc = history.history['accuracy'][-1]
     final_val_acc = history.history['val_accuracy'][-1]
@@ -191,7 +190,7 @@ if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Обучение модели классификации сигналов')
-    parser.add_argument('--epochs', type=int, default=50, help='Количество эпох')
+    parser.add_argument('--epochs', type=int, default=60, help='Количество эпох')
     parser.add_argument('--batch_size', type=int, default=32, help='Размер батча')
 
     args = parser.parse_args()
